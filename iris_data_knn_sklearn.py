@@ -6,16 +6,14 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 
-
 # 读取数据
-iris_data_set = pd.read_csv('E:\\PyCharm-Workspace\\DataAnalysis\\data\\03 Iris\\DecisionTreeClassifier\\iris.csv')
+iris_data_set = pd.read_csv('/Users/apple/Desktop/深度学习数据/华侨医院-孕产妇EHR信息(脱敏)/balanced.csv')
 # x是4列特征
-x = iris_data_set.iloc[:, 0:4].values
+x = iris_data_set.iloc[:, 0:16].values
 # y是1列标签
 y = iris_data_set.iloc[:, -1].values
 
-# 划分训练集和测试集
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=1)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # 将特征转为一维数组
 y_train = y_train.flatten()
@@ -44,9 +42,17 @@ print('最优分数:', grid.best_score_)
 knn_model = grid.best_estimator_
 y_pre = knn_model.predict(x_test)
 
-print('正确标签：', y_test)
-print('预测结果：', y_pre)
-
+# print('正确标签：', y_test)
+# print('预测结果：', y_pre)
+count = 0
+count1 = 0
+for i in range(len(y_pre)):
+    if y_test[i] == 0 or y_test[i] == 2:
+        count += 1
+    if y_test[i] != y_pre[i] and (y_test[i] == 0 or y_test[i] == 2):
+        count1 += 1
+print('测试集中异常体重个数', count)
+print('测试集中异常体重预测失败个数', count1)
 print('训练集分数：', knn_model.score(x_train, y_train))
 print('测试集分数：', knn_model.score(x_test, y_test))
 
@@ -59,10 +65,10 @@ print(conf_mat)
 print('分类指标报告：')
 print(classification_report(y_test, y_pre))
 
-# 画图展示训练结果
-fig = plt.figure()
-ax = fig.add_subplot(111)
-f1 = ax.scatter(list(range(len(x_test))), y_test, marker='*')
-f2 = ax.scatter(list(range(len(x_test))), y_pre, marker='o')
-plt.legend(handles=[f1, f2], labels=['True', 'Prediction'])
-plt.show()
+# # 画图展示训练结果
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# f1 = ax.scatter(list(range(len(x_test))), y_test, marker='*')
+# f2 = ax.scatter(list(range(len(x_test))), y_pre, marker='o')
+# plt.legend(handles=[f1, f2], labels=['True', 'Prediction'])
+# plt.show()

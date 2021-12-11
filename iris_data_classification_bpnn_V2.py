@@ -3,6 +3,9 @@ import numpy as np
 import datetime
 import matplotlib.pyplot as plt
 from pandas.plotting import radviz
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+
 '''
     构建一个具有1个隐藏层的神经网络，隐层的大小为10
     输入层为4个特征，输出层为3个分类
@@ -34,8 +37,8 @@ def forward_propagation(X, parameters):
     b2 = parameters['b2']
 
     # 通过前向传播来计算a2
-    z1 = np.dot(w1, X) + b1     # 这个地方需注意矩阵加法：虽然(w1*X)和b1的维度不同，但可以相加
-    a1 = np.tanh(z1)            # 使用tanh作为第一层的激活函数
+    z1 = np.dot(w1, X) + b1  # 这个地方需注意矩阵加法：虽然(w1*X)和b1的维度不同，但可以相加
+    a1 = np.tanh(z1)  # 使用tanh作为第一层的激活函数
     z2 = np.dot(w2, a1) + b2
     a2 = 1 / (1 + np.exp(-z2))  # 使用sigmoid作为第二层的激活函数
 
@@ -47,7 +50,7 @@ def forward_propagation(X, parameters):
 
 # 3.计算代价函数
 def compute_cost(a2, Y):
-    m = Y.shape[1]      # Y的列数即为总的样本数
+    m = Y.shape[1]  # Y的列数即为总的样本数
 
     # 采用交叉熵（cross-entropy）作为代价函数
     logprobs = np.multiply(np.log(a2), Y) + np.multiply((1 - Y), np.log(1 - a2))
@@ -79,7 +82,7 @@ def backward_propagation(parameters, cache, X, Y):
 
 
 # 5.更新参数
-def update_parameters(parameters, grads, learning_rate=0.4):
+def update_parameters(parameters, grads, learning_rate=0.01):
     w1 = parameters['w1']
     b1 = parameters['b1']
     w2 = parameters['w2']
@@ -102,11 +105,11 @@ def update_parameters(parameters, grads, learning_rate=0.4):
 
 
 # 建立神经网络
-def nn_model(X, Y, n_h, n_input, n_output, num_iterations=10000, print_cost=False):
+def nn_model(X, Y, n_h, n_input, n_output, num_iterations=5000, print_cost=False):
     np.random.seed(3)
 
-    n_x = n_input           # 输入层节点数
-    n_y = n_output          # 输出层节点数
+    n_x = n_input  # 输入层节点数
+    n_y = n_output  # 输出层节点数
 
     # 1.初始化参数
     parameters = initialize_parameters(n_x, n_h, n_y)
@@ -159,14 +162,29 @@ def predict(parameters, x_test, y_test):
     print('真实结果：', y_test)
 
     count = 0
+    count1 = 0
+    count2 = 0
+    count3 = 0
     for k in range(0, n_cols):
+        if y_test[0][k] == 1 or y_test[2][k] == 1:
+            count3 = count3 + 1  # 非正常样本个数
         if output[0][k] == y_test[0][k] and output[1][k] == y_test[1][k] and output[2][k] == y_test[2][k]:
-            count = count + 1
+            count += 1
+            if y_test[0][k] == 1 or y_test[2][k] == 1:
+                count1 += 1  # 分类正确的非正常样本个数
         else:
-            print('错误分类样本的序号：', k + 1)
+            if y_test[0][k] == 1 or y_test[2][k] == 1:
+                # if y_test[1][k] != 1:
+                # print('错误分类样本的序号：', k + 1)
+                count2 += 1
 
     acc = count / int(y_test.shape[1]) * 100
     print('准确率：%.2f%%' % acc)
+    print(count2)
+    print(count1)
+    print(count3)
+    print(count)
+    print(y_test.shape[1])
 
     return output
 
@@ -202,12 +220,16 @@ def result_visualization(x_test, y_test, result):
     prediction = np.column_stack((x_test.T, pre))
 
     # 转换成DataFrame类型，并添加columns
-    df_real = pd.DataFrame(real, index=None, columns=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width', 'Species'])
-    df_prediction = pd.DataFrame(prediction, index=None, columns=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width', 'Species'])
+    df_real = pd.DataFrame(real, index=None,
+                           columns=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width', 'Species'])
+    df_prediction = pd.DataFrame(prediction, index=None,
+                                 columns=['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width', 'Species'])
 
     # 将特征列转换为float类型，否则radviz会报错
-    df_real[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']] = df_real[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']].astype(float)
-    df_prediction[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']] = df_prediction[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']].astype(float)
+    df_real[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']] = df_real[
+        ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']].astype(float)
+    df_prediction[['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']] = df_prediction[
+        ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']].astype(float)
 
     # 绘图
     plt.figure('真实分类')
@@ -217,13 +239,43 @@ def result_visualization(x_test, y_test, result):
     plt.show()
 
 
+def get_label(y_label):  # 一维转三维
+    n = len(y_label)
+    ans = np.zeros([3, n], dtype='uint8')
+    for i in range(len(y_label)):
+        if y_label[i] == 0:
+            ans[0][i] = 1
+        elif y_label[i] == 1:
+            ans[1][i] = 1
+        else:
+            ans[2][i] = 1
+    print(ans.dtype)
+    return ans
+
+
+def get_result(output):  # 三维转一维
+    n = output.shape[1]
+    ans = []
+
+    for i in range(n):
+        if output[1][i] == 1:
+            ans.append(1)
+        elif output[2][i] == 1:
+            ans.append(2)
+        else:
+            ans.append(0)
+    return np.array(ans)
+
+
 if __name__ == "__main__":
     # 读取数据
-    data_set = pd.read_csv('E:\\GitHub\\iris_classification_BPNeuralNetwork\\bpnn_V2数据集\\iris_training.csv', header=None)
+    data_set = pd.read_csv('/Users/apple/Desktop/深度学习数据/华侨医院-孕产妇EHR信息(脱敏)/balanced.csv')
 
     # 第1种取数据方法：
-    X = data_set.iloc[:, 0:4].values.T          # 前四列是特征，T表示转置
-    Y = data_set.iloc[:, 4:].values.T           # 后三列是标签
+    # X = data_set.iloc[:, 0:16].values.T  # 前四列是特征，T表示转置
+    # Y = data_set.iloc[:, 17:18].values.T  # 后三列是标签
+    X = data_set.iloc[:, 0:16].values  # 前四列是特征，T表示转置
+    Y = data_set.iloc[:, -1].values  # 后三列是标签
 
     # 第2种取数据方法：
     # X = data_set.ix[:, 0:3].values.T
@@ -237,21 +289,38 @@ if __name__ == "__main__":
     # X = data_set[data_set.columns[0:4]].values.T
     # Y = data_set[data_set.columns[4:7]].values.T
     Y = Y.astype('uint8')
+    x_train, x_test, y_train_single, y_test_single = train_test_split(X, Y, test_size=0.2, random_state=4)
+    y_train = get_label(y_train_single)
+    y_test = get_label(y_test_single)
+    print(type(x_train))
+    x_train = x_train.T
+    x_test = x_test.T
+    # print(x_test, y_test)
 
     # 开始训练
     start_time = datetime.datetime.now()
     # 输入4个节点，隐层10个节点，输出3个节点，迭代10000次
-    parameters = nn_model(X, Y, n_h=10, n_input=4, n_output=3, num_iterations=10000, print_cost=True)
+    parameters = nn_model(x_train, y_train, n_h=10, n_input=16, n_output=3, num_iterations=5000, print_cost=True)
     end_time = datetime.datetime.now()
-    print("用时：" + str((end_time - start_time).seconds) + 's' + str(round((end_time - start_time).microseconds / 1000)) + 'ms')
-
-    # 对模型进行测试
-    data_test = pd.read_csv('E:\\GitHub\\iris_classification_BPNeuralNetwork\\bpnn_V2数据集\\iris_test.csv', header=None)
-    x_test = data_test.iloc[:, 0:4].values.T
-    y_test = data_test.iloc[:, 4:].values.T
-    y_test = y_test.astype('uint8')
+    print("用时：" + str((end_time - start_time).seconds) + 's' + str(
+        round((end_time - start_time).microseconds / 1000)) + 'ms')
 
     result = predict(parameters, x_test, y_test)
 
+    # 混淆矩阵
+    y_pre = get_result(result)
+    conf_mat = confusion_matrix(y_test_single, y_pre)
+
+    print('混淆矩阵：')
+    print(conf_mat)
+
+
+
     # 分类结果可视化
-    result_visualization(x_test, y_test, result)
+    # result_visualization(x_test, y_test, result)
+
+    # data_length = data_label.shape[0]
+    # train_data_length = int(data_length * 0.8)
+    # print("train_label_length:", train_data_length)
+    # data_sample_train, data_sample_test = data_sample[:train_data_length], data_sample[train_data_length:]
+    # data_label_train, data_label_test = data_label[:train_data_length], data_label[train_data_length:]

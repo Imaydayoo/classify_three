@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 
-data = pd.read_csv('D:\\iris.csv', sep=',', encoding='utf-8')
+data = pd.read_csv('/Users/apple/Desktop/iris_classification_BPNeuralNetwork/sklearn数据集/iris.csv', sep=',', encoding='utf-8')
 x = data[['A', 'B', 'C', 'D']].as_matrix()
 real = data['E'].as_matrix()
 

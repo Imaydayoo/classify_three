@@ -225,7 +225,7 @@ def result_visualization(x_test, y_test, result):
 
 if __name__ == "__main__":
     # 读取数据
-    iris = pd.read_csv('E:\\GitHub\\iris_classification_BPNeuralNetwork\\bpnn_V1数据集\\iris_training.csv')
+    iris = pd.read_csv('/Users/apple/Desktop/iris_classification_BPNeuralNetwork/iris_data_classification_bpnn_V1.py')
     X = iris[['SepalLength', 'SepalWidth', 'PetalLength', 'PetalWidth']].values.T  # T是转置
     Y = iris['species'].values
 
@@ -243,7 +243,8 @@ if __name__ == "__main__":
     print("用时：" + str(round((end_time - start_time).microseconds / 1000)) + 'ms')
 
     # 对模型进行测试
-    data_test = pd.read_csv('E:\\GitHub\\iris_classification_BPNeuralNetwork\\bpnn_V1数据集\\iris_test.csv')
+    data_test = pd.read_csv('/Users/apple/Desktop/iris_classification_BPNeuralNetwork'
+                            '/iris_data_classification_bpnn_V1.py')
     x_test = data_test[['SepalLength', 'SepalWidth', 'PetalLength', 'PetalWidth']].values.T
     y_test = data_test['species'].values
 
